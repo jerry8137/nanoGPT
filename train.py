@@ -10,13 +10,12 @@ print(''.join(chars))
 print('vocabulary size: ', vocabulary_size)
 
 stoi = {char: i for i, char in enumerate(chars)}
+itos = {i: char for i, char in enumerate(chars)}
 
 
-def encode(input):
-    output = []
-    for i in input:
-        output.append(stoi[i])
-    return output
+def encode(input): return [stoi[i] for i in input]
+def decode(input): return ''.join([itos[i] for i in input])
 
 
 print(encode('hello world'))
+print(decode(encode('hello world')))
