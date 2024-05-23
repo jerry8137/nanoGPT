@@ -1,5 +1,6 @@
 from bigramLanguageModel import BigramLanguageModel
 import torch
+from tqdm import tqdm
 
 with open('input.txt', 'r', encoding='utf-8') as f:
     text = f.read()
@@ -68,7 +69,7 @@ print(decode(m.generate(idx,
 optimizer = torch.optim.AdamW(m.parameters(), lr=1e-3)
 
 batch_size = 32
-for steps in range(100):
+for steps in tqdm(range(10000)):
     xb, yb = get_batch('train')
 
     logits, loss = m(xb, yb)
@@ -76,4 +77,8 @@ for steps in range(100):
     loss.backward()
     optimizer.step()
 
-    print(loss.item())
+print(loss.item())
+
+idx = torch.zeros((1, 1), dtype=torch.long)
+print(decode(m.generate(idx,
+      max_new_token=500)[0].tolist()))
