@@ -43,20 +43,41 @@ def get_batch(split):
 
 
 xb, yb = get_batch('train')
-m = BigramLanguageModel(len(chars))
-m.to(device)
+model = BigramLanguageModel(len(chars))
+model.to(device)
 
-optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
+optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-for steps in tqdm(range(max_iters)):
+
+@torch.no_grad()
+def estimate_loss():
+    output = {}
+    model.eval()
+    for split in ['train', 'val']:
+        losses = torch.zeros(eval_iters)
+        for k in range(eval_iters):
+            x, y = get_batch(split)
+            logits, loss = model(x, y)
+            losses[k] = loss.item()
+
+        output[split] = loss.mean()
+    model.train()
+    return output
+
+
+for steps in (range(max_iters)):
     xb, yb = get_batch('train')
 
-    logits, loss = m(xb, yb)
+    logits, loss = model(xb, yb)
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
+    if steps % eval_interval == 0:
+        eval_loss = estimate_loss()
+        print(
+            f"step: {steps}, train loss: {eval_loss['train']:.4f}, val loss: {eval_loss['val']:.4f}")
 
 print(loss.item())
 
 idx = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(decode(m.generate(idx, max_new_token=500)[0].tolist()))
+print(decode(model.generate(idx, max_new_token=500)[0].tolist()))
