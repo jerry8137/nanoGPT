@@ -1,3 +1,4 @@
+from bigramLanguageModel import BigramLanguageModel
 import torch
 
 with open('input.txt', 'r', encoding='utf-8') as f:
@@ -53,3 +54,8 @@ for b in range(batch_size):
         context = xb[b, :t+1]
         target = yb[b, t]
         print(f"when input is {context.tolist()} the target: {target}")
+
+
+m = BigramLanguageModel(vocabulary_size)
+out = m(xb, yb)
+print(out.shape)
