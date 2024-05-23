@@ -59,3 +59,8 @@ for b in range(batch_size):
 m = BigramLanguageModel(vocabulary_size)
 logits, loss = m(xb, yb)
 print(logits.shape)
+print(loss)
+
+idx = torch.zeros((1, 1), dtype=torch.long)
+print(decode(m.generate(idx,
+      max_new_token=100)[0].tolist()))
