@@ -37,13 +37,14 @@ val_data = data[:n]
 def get_batch(split):
     data = train_data if split == 'train' else val_data
     ix = torch.randint(len(data) - block_size, (batch_size,))
-    x = torch.tensor([data[i:i+block_size] for i in ix])
-    y = torch.tensor([data[i+1:i+block_size+1] for i in ix])
+    x = torch.tensor([data[i:i+block_size] for i in ix], device=device)
+    y = torch.tensor([data[i+1:i+block_size+1] for i in ix], device=device)
     return x, y
 
 
 xb, yb = get_batch('train')
 m = BigramLanguageModel(len(chars))
+m.to(device)
 
 optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
 
@@ -57,6 +58,5 @@ for steps in tqdm(range(max_iters)):
 
 print(loss.item())
 
-idx = torch.zeros((1, 1), dtype=torch.long)
-print(decode(m.generate(idx,
-      max_new_token=500)[0].tolist()))
+idx = torch.zeros((1, 1), dtype=torch.long, device=device)
+print(decode(m.generate(idx, max_new_token=500)[0].tolist()))
