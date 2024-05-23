@@ -64,3 +64,16 @@ print(loss)
 idx = torch.zeros((1, 1), dtype=torch.long)
 print(decode(m.generate(idx,
       max_new_token=100)[0].tolist()))
+
+optimizer = torch.optim.AdamW(m.parameters(), lr=1e-3)
+
+batch_size = 32
+for steps in range(100):
+    xb, yb = get_batch('train')
+
+    logits, loss = m(xb, yb)
+    optimizer.zero_grad(set_to_none=True)
+    loss.backward()
+    optimizer.step()
+
+    print(loss.item())
