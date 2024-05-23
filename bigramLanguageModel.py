@@ -14,4 +14,9 @@ class BigramLanguageModel(nn.Module):
         # idx and targtets are both (B, T)
         logits = self.token_embedding_table(idx)  # (B, T, C)
 
-        return logits
+        B, T, C = logits.shape
+        logits = logits.view(B*T, C)
+        targets = targets.view(B*T)
+        loss = F.cross_entropy(logits, targets)
+
+        return logits, loss

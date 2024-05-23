@@ -57,5 +57,5 @@ for b in range(batch_size):
 
 
 m = BigramLanguageModel(vocabulary_size)
-out = m(xb, yb)
-print(out.shape)
+logits, loss = m(xb, yb)
+print(logits.shape)
