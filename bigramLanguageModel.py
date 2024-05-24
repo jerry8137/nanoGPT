@@ -37,12 +37,15 @@ class Block(nn.Module):
 
 class BigramLanguageModel(nn.Module):
     def __init__(self, vocab_size, n_embed, block_size,
-                 device, n_layer, dropout):
+                 device, n_layer, dropout, n_head):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
         self.position_embedding_table = nn.Embedding(block_size, n_embed)
         self.blocks = nn.Sequential(
-            *[Block(n_embed, n_head=4, block_size=block_size, dropout=dropout)
+            *[Block(n_embed,
+                    n_head=n_head,
+                    block_size=block_size,
+                    dropout=dropout)
               for _ in range(n_layer)])
         self.ln = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)

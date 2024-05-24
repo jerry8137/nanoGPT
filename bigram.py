@@ -3,16 +3,17 @@ from bigramLanguageModel import BigramLanguageModel
 from tqdm import tqdm
 
 batch_size = 64
-block_size = 8
+block_size = 256
 max_iters = 5000
 eval_interval = 500
-learning_rate = 1e-3
+learning_rate = 3e-4
 device = "mps" if torch.backends.mps.is_available(
 ) else "cuda" if torch.cuda.is_available() else "cpu"
 eval_iters = 200
-n_embed = 32
-n_layer = 8
-dropout = 0.9
+n_embed = 384
+n_layer = 6
+n_head = 6
+dropout = 0.2
 
 torch.manual_seed(1337)
 
@@ -46,7 +47,13 @@ def get_batch(split):
 
 
 xb, yb = get_batch('train')
-model = BigramLanguageModel(len(chars), n_embed, block_size, device, n_layer, dropout)
+model = BigramLanguageModel(len(chars),
+                            n_embed,
+                            block_size,
+                            device,
+                            n_layer,
+                            dropout,
+                            n_head)
 model.to(device)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
