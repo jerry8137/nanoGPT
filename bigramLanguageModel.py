@@ -5,16 +5,22 @@ torch.manual_seed(1337)
 
 
 class BigramLanguageModel(nn.Module):
-    def __init__(self, vocab_size, n_embed):
+    def __init__(self, vocab_size, n_embed, block_size, device):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
+        self.position_embedding_table = nn.Embedding(block_size, n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
+        self.device = device
 
     def forward(self, idx, targets=None):
+        B, T = idx.shape
 
         # idx and targtets are both (B, T)
         token_embed = self.token_embedding_table(idx)  # (B, T, C)
-        logits = self.lm_head(token_embed)
+        position_embed = self.position_embedding_table(
+            torch.arange(T, device=self.device))
+        x = token_embed + position_embed
+        logits = self.lm_head(x)
 
         if targets is None:
             loss = None

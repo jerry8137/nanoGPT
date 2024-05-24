@@ -44,7 +44,7 @@ def get_batch(split):
 
 
 xb, yb = get_batch('train')
-model = BigramLanguageModel(len(chars), n_embed)
+model = BigramLanguageModel(len(chars), n_embed, block_size, device)
 model.to(device)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
