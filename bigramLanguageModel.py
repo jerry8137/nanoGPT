@@ -5,14 +5,16 @@ torch.manual_seed(1337)
 
 
 class BigramLanguageModel(nn.Module):
-    def __init__(self, vocab_size):
+    def __init__(self, vocab_size, n_embed):
         super().__init__()
-        self.token_embedding_table = nn.Embedding(vocab_size, vocab_size)
+        self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
+        self.lm_head = nn.Linear(n_embed, vocab_size)
 
-    def forward(self, idx, targets):
+    def forward(self, idx, targets=None):
 
         # idx and targtets are both (B, T)
-        logits = self.token_embedding_table(idx)  # (B, T, C)
+        token_embed = self.token_embedding_table(idx)  # (B, T, C)
+        logits = self.lm_head(token_embed)
 
         if targets is None:
             loss = None
@@ -26,7 +28,7 @@ class BigramLanguageModel(nn.Module):
 
     def generate(self, idx, max_new_token):
         for _ in range(max_new_token):
-            logits, loss = self(idx, None)
+            logits, loss = self(idx)
             logits = logits[:, -1, :]  # take last one, the pred
             probs = F.softmax(logits, dim=-1)
             # choose one from prob (B, 1)
