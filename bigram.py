@@ -74,8 +74,9 @@ for steps in (range(max_iters)):
     optimizer.step()
     if steps % eval_interval == 0:
         eval_loss = estimate_loss()
-        print(
-            f"step: {steps}, train loss: {eval_loss['train']:.4f}, val loss: {eval_loss['val']:.4f}")
+        print(f"step: {steps}:")
+        print(f"  train loss: {eval_loss['train']:.4f},")
+        print(f"  val loss: {eval_loss['val']:.4f}")
 
 print(loss.item())
 
