@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+import attention
 torch.manual_seed(1337)
 
 
@@ -9,8 +10,12 @@ class BigramLanguageModel(nn.Module):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
         self.position_embedding_table = nn.Embedding(block_size, n_embed)
+        self.sa_head = attention.MultiHeadAttention(
+            4, n_embed//4, n_embed, block_size)
         self.lm_head = nn.Linear(n_embed, vocab_size)
+
         self.device = device
+        self.block_size = block_size
 
     def forward(self, idx, targets=None):
         B, T = idx.shape
@@ -18,8 +23,9 @@ class BigramLanguageModel(nn.Module):
         # idx and targtets are both (B, T)
         token_embed = self.token_embedding_table(idx)  # (B, T, C)
         position_embed = self.position_embedding_table(
-            torch.arange(T, device=self.device))
+            torch.arange(T, device=self.device))  # (T,C)
         x = token_embed + position_embed
+        x = self.sa_head(x)
         logits = self.lm_head(x)
 
         if targets is None:
@@ -34,7 +40,8 @@ class BigramLanguageModel(nn.Module):
 
     def generate(self, idx, max_new_token):
         for _ in range(max_new_token):
-            logits, loss = self(idx)
+            idx_crop = idx[:, -self.block_size:]
+            logits, loss = self(idx_crop)
             logits = logits[:, -1, :]  # take last one, the pred
             probs = F.softmax(logits, dim=-1)
             # choose one from prob (B, 1)
