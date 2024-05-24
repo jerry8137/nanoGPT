@@ -11,6 +11,8 @@ device = "mps" if torch.backends.mps.is_available(
 ) else "cuda" if torch.cuda.is_available() else "cpu"
 eval_iters = 200
 n_embed = 32
+n_layer = 8
+dropout = 0.9
 
 torch.manual_seed(1337)
 
@@ -44,7 +46,7 @@ def get_batch(split):
 
 
 xb, yb = get_batch('train')
-model = BigramLanguageModel(len(chars), n_embed, block_size, device)
+model = BigramLanguageModel(len(chars), n_embed, block_size, device, n_layer, dropout)
 model.to(device)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)

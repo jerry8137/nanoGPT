@@ -5,13 +5,46 @@ import attention
 torch.manual_seed(1337)
 
 
+class FeedForward(nn.Module):
+    def __init__(self, n_embed, dropout):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embed, 4 * n_embed),
+            nn.ReLU(),
+            nn.Linear(4 * n_embed, n_embed),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class Block(nn.Module):
+    def __init__(self, n_embed, n_head, block_size, dropout):
+        super().__init__()
+        head_size = n_embed // n_head
+        self.sa = attention.MultiHeadAttention(
+            n_head, head_size, n_embed, block_size, dropout)
+        self.ffwd = FeedForward(n_embed, dropout)
+        self.ln1 = nn.LayerNorm(n_embed)
+        self.ln2 = nn.LayerNorm(n_embed)
+
+    def forward(self, x):
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ffwd(self.ln2(x))
+        return x
+
+
 class BigramLanguageModel(nn.Module):
-    def __init__(self, vocab_size, n_embed, block_size, device):
+    def __init__(self, vocab_size, n_embed, block_size,
+                 device, n_layer, dropout):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
         self.position_embedding_table = nn.Embedding(block_size, n_embed)
-        self.sa_head = attention.MultiHeadAttention(
-            4, n_embed//4, n_embed, block_size)
+        self.blocks = nn.Sequential(
+            *[Block(n_embed, n_head=4, block_size=block_size, dropout=dropout)
+              for _ in range(n_layer)])
+        self.ln = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
 
         self.device = device
@@ -25,7 +58,8 @@ class BigramLanguageModel(nn.Module):
         position_embed = self.position_embedding_table(
             torch.arange(T, device=self.device))  # (T,C)
         x = token_embed + position_embed
-        x = self.sa_head(x)
+        x = self.blocks(x)
+        x = self.ln(x)
         logits = self.lm_head(x)
 
         if targets is None:
