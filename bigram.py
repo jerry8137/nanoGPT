@@ -75,7 +75,7 @@ def estimate_loss():
     return output
 
 
-for steps in (range(max_iters)):
+for steps in tqdm(range(max_iters)):
     xb, yb = get_batch('train')
 
     logits, loss = model(xb, yb)
